@@ -1,8 +1,8 @@
-version: '2.1'
+version: '3.5'
 
 networks:
-  monitor-net:
-    driver: bridge
+  monitor_net:
+    name:  monitor_net
 
 volumes:
     prometheus_data: {}
@@ -27,23 +27,7 @@ services:
     expose:
       - 9090
     networks:
-      - monitor-net
-    labels:
-      org.label-schema.group: "monitoring"
-
-  alertmanager:
-    image: prom/alertmanager:v0.24.0
-    container_name: alertmanager
-    volumes:
-      - ./alertmanager:/etc/alertmanager
-    command:
-      - '--config.file=/etc/alertmanager/config.yml'
-      - '--storage.path=/alertmanager'
-    restart: unless-stopped
-    expose:
-      - 9093
-    networks:
-      - monitor-net
+      - monitor_net
     labels:
       org.label-schema.group: "monitoring"
 
@@ -63,7 +47,7 @@ services:
     expose:
       - 9100
     networks:
-      - monitor-net
+      - monitor_net
     labels:
       org.label-schema.group: "monitoring"
 
@@ -83,7 +67,7 @@ services:
     expose:
       - 8080
     networks:
-      - monitor-net
+      - monitor_net
     labels:
       org.label-schema.group: "monitoring"
 
@@ -102,18 +86,7 @@ services:
     expose:
       - 3000
     networks:
-      - monitor-net
-    labels:
-      org.label-schema.group: "monitoring"
-
-  pushgateway:
-    image: prom/pushgateway:v1.4.3
-    container_name: pushgateway
-    restart: unless-stopped
-    expose:
-      - 9091
-    networks:
-      - monitor-net
+      - monitor_net
     labels:
       org.label-schema.group: "monitoring"
 
@@ -121,18 +94,45 @@ services:
     image: caddy:2.3.0
     container_name: caddy
     ports:
-      - "3000:3000"
-      - "9090:9090"
-      - "9093:9093"
-      - "9091:9091"
+      - "3000:3000"  # grafana
+      - "9090:9090"  # prometheus
+      # - "9093:9093"  # alertmanager
+      # - "9091:9091"  # pushgateway
     volumes:
       - ./caddy:/etc/caddy
     environment:
       - ADMIN_USER=${ADMIN_USER:-admin}
       - ADMIN_PASSWORD=${ADMIN_PASSWORD:-admin}
-      - ADMIN_PASSWORD_HASH=${ADMIN_PASSWORD_HASH:-JDJhJDE0JE91S1FrN0Z0VEsyWmhrQVpON1VzdHVLSDkyWHdsN0xNbEZYdnNIZm1pb2d1blg4Y09mL0ZP}
+      - ADMIN_PASSWORD_HASH=${ADMIN_PASSWORD_HASH:-JDJhJDE0JDdPcHVnOGJmRTZ1RHBKekFBNDI5dC5KU292R3lpQmRWNUtTYTFOS3J1ZHFDNGJPUUxOU2dD}
     restart: unless-stopped
     networks:
-      - monitor-net
+      - monitor_net
     labels:
       org.label-schema.group: "monitoring"
+
+  # pushgateway:
+  #   image: prom/pushgateway:v1.4.3
+  #   container_name: pushgateway
+  #   restart: unless-stopped
+  #   expose:
+  #     - 9091
+  #   networks:
+  #     - monitor_net
+  #   labels:
+  #     org.label-schema.group: "monitoring"
+
+  # alertmanager:
+  #   image: prom/alertmanager:v0.24.0
+  #   container_name: alertmanager
+  #   volumes:
+  #     - ./alertmanager:/etc/alertmanager
+  #   command:
+  #     - '--config.file=/etc/alertmanager/config.yml'
+  #     - '--storage.path=/alertmanager'
+  #   restart: unless-stopped
+  #   expose:
+  #     - 9093
+  #   networks:
+  #     - monitor_net
+  #   labels:
+  #     org.label-schema.group: "monitoring"
