@@ -13,6 +13,17 @@ rule_files:
 
 # A scrape configuration containing exactly one endpoint to scrape.
 scrape_configs:
+  - job_name: "ha"
+    scrape_interval: 60s
+    metrics_path: /api/prometheus
+
+    # Long-Lived Access Token
+    bearer_token: "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiIzNDA5NzE3MzY3NTc0ZjcwOTU0MDBjMTMwZWU1YTg2NiIsImlhdCI6MTY1OTkxNTU1MSwiZXhwIjoxOTc1Mjc1NTUxfQ.1-HYJlgslbx7yTA0g1MGbz3Gq8pgZERwmp9tPsulcHM"
+
+    scheme: https
+    static_configs:
+      - targets: ['192.168.1.2:8123']
+
   - job_name: 'nodeexporter'
     scrape_interval: 5s
     static_configs:
