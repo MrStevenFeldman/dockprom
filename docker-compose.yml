@@ -1,5 +1,11 @@
 version: '3.5'
 
+secrets:
+  admin_user:
+    file: ./secrets/admin_user.txt
+  admin_pw_hash:
+    file: ./secrets/admin_pw_hash.txt
+
 networks:
   monitor_net:
     name:  monitor_net
@@ -79,8 +85,8 @@ services:
       - ./grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards
       - ./grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
     environment:
-      - GF_SECURITY_ADMIN_USER=${ADMIN_USER:-admin}
-      - GF_SECURITY_ADMIN_PASSWORD=${ADMIN_PASSWORD:-admin}
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
       - GF_USERS_ALLOW_SIGN_UP=false
     restart: unless-stopped
     expose:
@@ -100,10 +106,13 @@ services:
       # - "9091:9091"  # pushgateway
     volumes:
       - ./caddy:/etc/caddy
-    environment:
-      - ADMIN_USER=${ADMIN_USER:-admin}
-      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-admin}
-      - ADMIN_PASSWORD_HASH=${ADMIN_PASSWORD_HASH:-JDJhJDE0JDdPcHVnOGJmRTZ1RHBKekFBNDI5dC5KU292R3lpQmRWNUtTYTFOS3J1ZHFDNGJPUUxOU2dD}
+    secrets:
+        - admin_user
+        - admin_pw_hash
+    entrypoint: 
+        - '/bin/sh'
+        - '-c'
+        - 'export ADMIN_USER=$$(cat /var/run/secrets/admin_user) && export ADMIN_PASSWORD_HASH=$$(cat /var/run/secrets/admin_pw_hash) && caddy run --config=/etc/caddy/Caddyfile --adapter=caddyfile '
     restart: unless-stopped
     networks:
       - monitor_net

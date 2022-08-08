@@ -13,9 +13,14 @@ Clone this repository on your Docker host, cd into dockprom directory and run co
 git clone https://github.com/stefanprodan/dockprom
 cd dockprom
 
-ADMIN_USER=admin \
-ADMIN_PASSWORD=admin \
-ADMIN_PASSWORD_HASH=$(docker run --rm caddy caddy hash-password --plaintext '${ADMIN_PASSWORD}') \
+ADMIN_USER=admin
+ADMIN_PASSWORD=admin
+
+mkdir secrets
+printf "${ADMIN_USER}" > secrets/admin_user.txt
+printf "${ADMIN_PASSWORD}" > secrets/admin_pw.txt
+docker run --rm caddy caddy hash-password --plaintext '${ADMIN_PASSWORD}' > secrets/admin_pw_hash.txt
+
 docker-compose up -d
 ```
 
