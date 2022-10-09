@@ -1,13 +1,6 @@
 version: '3.5'
 
-secrets:
-  admin_user:
-    file: ./secrets/admin_user.txt
-  admin_pw_hash:
-    file: ./secrets/admin_pw_hash.txt
-
-networks:
-  monitor_net:
+monitor_net:
     name:  monitor_net
 
 volumes:
@@ -17,6 +10,7 @@ volumes:
 services:
 
   prometheus:
+    restart: unless-stopped
     image: prom/prometheus:v2.37.0
     container_name: prometheus
     volumes:
@@ -29,7 +23,6 @@ services:
       - '--web.console.templates=/etc/prometheus/consoles'
       - '--storage.tsdb.retention.time=200h'
       - '--web.enable-lifecycle'
-    restart: unless-stopped
     expose:
       - 9090
     networks:
@@ -38,6 +31,7 @@ services:
       org.label-schema.group: "monitoring"
 
   nodeexporter:
+    restart: unless-stopped
     image: prom/node-exporter:v1.3.1
     container_name: nodeexporter
     volumes:
@@ -49,7 +43,6 @@ services:
       - '--path.rootfs=/rootfs'
       - '--path.sysfs=/host/sys'
       - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
-    restart: unless-stopped
     expose:
       - 9100
     networks:
@@ -58,6 +51,7 @@ services:
       org.label-schema.group: "monitoring"
 
   cadvisor:
+    restart: unless-stopped
     image: gcr.io/cadvisor/cadvisor:v0.44.0
     container_name: cadvisor
     privileged: true
@@ -69,7 +63,6 @@ services:
       - /sys:/sys:ro
       - /var/lib/docker:/var/lib/docker:ro
       #- /cgroup:/cgroup:ro #doesn't work on MacOS only for Linux
-    restart: unless-stopped
     expose:
       - 8080
     networks:
@@ -91,29 +84,6 @@ services:
     restart: unless-stopped
     expose:
       - 3000
-    networks:
-      - monitor_net
-    labels:
-      org.label-schema.group: "monitoring"
-
-  caddy:
-    image: caddy:2.3.0
-    container_name: caddy
-    ports:
-      - "3000:3000"  # grafana
-      - "9090:9090"  # prometheus
-      # - "9093:9093"  # alertmanager
-      # - "9091:9091"  # pushgateway
-    volumes:
-      - ./caddy:/etc/caddy
-    secrets:
-        - admin_user
-        - admin_pw_hash
-    entrypoint: 
-        - '/bin/sh'
-        - '-c'
-        - 'export ADMIN_USER=$$(cat /var/run/secrets/admin_user) && export ADMIN_PASSWORD_HASH=$$(cat /var/run/secrets/admin_pw_hash) && caddy run --config=/etc/caddy/Caddyfile --adapter=caddyfile '
-    restart: unless-stopped
     networks:
       - monitor_net
     labels:
